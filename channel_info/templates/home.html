@@ -1,0 +1,11 @@
+<!-- templates/home.html -->
+{% extends 'base.html' %}
+ 
+{% block content %}
+  {% for ChannelInfo in object_list %}
+    <div class="ChannelInfo-entry">
+      <h2><a href="{% url 'channelinfo_detail' ChannelInfo.pk %}">{{ ChannelInfo.about }}</a></h2>
+      <p>{{ ChannelInfo.participants_count }}</p>
+    </div>
+  {% endfor %}
+{% endblock content %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+ 
+{% block content %}
+  <div class="channel-entry">
+    <p>id = {{ object.id }}</p>
+    <p>about = {{ object.about }}</p>
+    <p>chat_photo = {{ object.chat_photo }}</p>
+    <p>view_participants = {{ object.view_participants }}</p>
+    <p>participants_count = {{ object.participants_count }}</p>
+    <p>online_count = {{ object.online_count }}</p>
+  </div>
+ 
+{% endblock content %}
