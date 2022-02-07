@@ -1,2 +1,5 @@
 config.ini
-session_user.session
+*.session
+*.session-journal
+__pycache__/
+*.pyc

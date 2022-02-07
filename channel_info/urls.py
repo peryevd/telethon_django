@@ -8,4 +8,5 @@ urlpatterns = [
     path('', ChannelInfoListView.as_view(), name='home'),
     path('api/SubNewMes', views.SubNewMes, name="SubNewMes"),
     path('api/GetChannelInfo', views.GetChannelInfo, name="GetChannelInfo"),
+    path('api/GetPercent', views.GetPercent, name="GetPercent"),
 ]

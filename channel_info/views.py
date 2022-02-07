@@ -48,11 +48,11 @@ def SubNewMes(request):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
         
-    with TelegramClient('session_user', api_id, api_hash) as client:
+    with TelegramClient(username, api_id, api_hash) as client:
         print("Начало прослушивания")
-        @client.on(events.NewMessage(chats = ['obshchenieo']))
+        @client.on(events.NewMessage(chats = request.data['channel_name']))
         async def main(event):
-            messages = await sync_to_async(MessageChannel.objects.get, thread_sensitive=True)(id=1)
+            messages = await sync_to_async(MessageChannel.objects.get, thread_sensitive=True)(id=21)
             messages.json = json.loads(event.to_json())
             await sync_to_async(messages.save, thread_sensitive=True)()
             print(event.message.to_dict()['message'])
@@ -67,7 +67,7 @@ def GetChannelInfo(request):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    with TelegramClient('session_user', api_id, api_hash) as client:
+    with TelegramClient(username, api_id, api_hash) as client:
 
         # save channel info
         print("Получение информации о канале...")
@@ -106,9 +106,42 @@ def GetChannelInfo(request):
 
     return Response({"ChannelInfo " + request.data['channel_name'] + " DONE!"})
 
+@api_view(['POST'])
+def GetPercent(request):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    with TelegramClient(username, api_id, api_hash) as client:
+        # users = getUsersFromChannel(client, request.data['channel_name'], 10, 0)
+        users_with_phone = 0
+        users = []
+        result = client.get_participants(request.data['channel_name'], aggressive=True)
+        
+        print("Downloads done!")
+        
+        for usr in result:
+            users.append(
+                json.loads(usr.to_json())
+            )
+
+            if usr.phone is not None:
+                users_with_phone += 1
+
+        percentage = 100 * float(users_with_phone)/float(len(users))
+
+        print("Processing done!")
+
+        UsersInfo.objects.create(json = users)
+
+        print("Entry done!")
+
+        return Response({"GetPercent DONE! Count - " + str(len(users)) + " Users with phone: " + str(users_with_phone) + "(" + str(round(percentage, 2)) + "%)"}) 
+ 
+
 class ChannelInfoView(APIView):
     def get(self, request):
         return Response({"ChannelInfoView get"})
+
 
 
 
