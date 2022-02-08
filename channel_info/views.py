@@ -2,6 +2,10 @@ from django.views.generic import ListView, DetailView
 from rest_framework import viewsets
 from .serializers import ChannelInfoSerializer, ArticleSerializer
 
+from telethon.tl.functions.channels import GetParticipantsRequest
+from telethon.tl.types import ChannelParticipantsSearch
+from telethon.tl.functions.contacts import ResolveUsernameRequest
+
 from .models import ChannelInfo, UsersInfo, MessageChannel, MessageReply
 
 from rest_framework.response import Response
@@ -64,6 +68,7 @@ def SubNewMes(request):
 
 @api_view(['POST'])
 def GetChannelInfo(request):
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
@@ -112,11 +117,29 @@ def GetPercent(request):
     asyncio.set_event_loop(loop)
 
     with TelegramClient(username, api_id, api_hash) as client:
-        # users = getUsersFromChannel(client, request.data['channel_name'], 10, 0)
         users_with_phone = 0
         users = []
-        result = client.get_participants(request.data['channel_name'], aggressive=True)
+
+        # DOWNLOAD OPTION 1
         
+        result = client.get_participants(request.data['channel_name'], aggressive = True)
+
+        # DOWNLOAD OPTION 2
+        # offset = 0
+        # limit = 100
+        # result = []
+
+        # while True:
+        #     participants = client(GetParticipantsRequest(request.data['channel_name'], ChannelParticipantsSearch(''), offset, limit,
+        #         hash=0
+        #     ))
+        #     if not participants.users:
+        #         break
+        #     result.extend(participants.users)
+        #     offset += len(participants.users)
+                
+        #     print("Download " + str(offset) + " user")
+
         print("Downloads done!")
         
         for usr in result:
