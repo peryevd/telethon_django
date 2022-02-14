@@ -3,8 +3,8 @@ from rest_framework import viewsets
 from .serializers import ChannelInfoSerializer, ArticleSerializer
 
 from telethon.tl.functions.channels import GetParticipantsRequest
-from telethon.tl.types import ChannelParticipantsSearch
-from telethon.tl.functions.contacts import ResolveUsernameRequest
+from telethon.tl.types import ChannelParticipantsSearch, InputPhoneContact
+from telethon.tl.functions.contacts import ResolveUsernameRequest, DeleteContactsRequest
 
 from .models import ChannelInfo, UsersInfo, MessageChannel, MessageReply
 
@@ -160,6 +160,51 @@ def GetPercent(request):
 
         return Response({"GetPercent DONE! Count - " + str(len(users)) + " Users with phone: " + str(users_with_phone) + "(" + str(round(percentage, 2)) + "%)"}) 
  
+
+import csv
+import time
+from telethon import errors
+
+@api_view(['POST'])
+def AddContact(request):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    phone = []    
+    count = 0
+    with open('file') as f:
+        reader = csv.DictReader(f, delimiter=';')
+        for row in reader:
+            if(row['Phone 1 - Value']):
+                txt = "".join(c for c in row['Phone 1 - Value'] if c.isalnum())
+                if (txt.isdigit() and len(txt) == 11 and txt[1] == '9'):
+                    phone.append(txt)
+        with TelegramClient(username, api_id, api_hash) as client:
+            start = time.time()
+            for i in range(len(phone)):
+                try:
+                    time.sleep(1)
+                    result = client(functions.contacts.ImportContactsRequest(
+                        contacts=[InputPhoneContact(
+                            client_id = 0,
+                            phone = phone[i],
+                            first_name = str(i),
+                            last_name = str(i)
+                        )]
+                    ))
+                    if (result.users):
+                        print(phone[i] + " - доступен")
+                        count += 1
+                        client(functions.contacts.DeleteContactsRequest(id=[result.users[0]]))
+                    else:   
+                        print(phone[i] + " - НЕ ДОСТУПЕН")
+
+                    print("Всего: " + str(i + 1) +  ", Успешно: " + str(count))
+                except errors.FloodWaitError as e:
+                    print('Flood wait for ', e.seconds)        
+                    time.sleep(e.seconds)
+            end = time.time()
+    return Response({"Проверено номеров: " + str(i + 1) + ", Добавлено успешно: " + str(count) + " Затрачено времени: " + str(end - start)}) 
+
 
 class ChannelInfoView(APIView):
     def get(self, request):
