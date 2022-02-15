@@ -10,11 +10,10 @@ from .models import ChannelInfo, UsersInfo, MessageChannel, MessageReply
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import json
+import json, time, csv, asyncio, string
 
 from telethon.sync import TelegramClient, events
-from telethon import functions
-import asyncio
+from telethon import functions, errors
 
 from channel_info.src.users_from_channel import *
 from channel_info.src.all_users_from_reply import *
@@ -40,12 +39,6 @@ class BaseViewSet(viewsets.ModelViewSet):
 class ChannelInfoViewset(BaseViewSet):
     serializer_class = ChannelInfoSerializer
     model = ChannelInfo
-
-# olsior
-# AlexxIT_SmartHome
-# rbc_news
-# obshchenieo
-# TelegramTips
 
 @api_view(['POST'])
 def SubNewMes(request):
@@ -160,11 +153,6 @@ def GetPercent(request):
 
         return Response({"GetPercent DONE! Count - " + str(len(users)) + " Users with phone: " + str(users_with_phone) + "(" + str(round(percentage, 2)) + "%)"}) 
  
-
-import csv
-import time
-from telethon import errors
-
 @api_view(['POST'])
 def AddContact(request):
     loop = asyncio.new_event_loop()
@@ -205,6 +193,32 @@ def AddContact(request):
             end = time.time()
     return Response({"Проверено номеров: " + str(i + 1) + ", Добавлено успешно: " + str(count) + " Затрачено времени: " + str(end - start)}) 
 
+@api_view(['POST'])
+def GetUserByFilter(request):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    with TelegramClient(username, api_id, api_hash) as client:
+        users = []
+        limit = 200
+
+        # for filter in string.ascii_lowercase:
+        for filter in "абвгдеёжзийклмнопрстуфхцчшщъыьэюяabcdefghijklmnopqrstuvwxyz":
+            print("Поиск по: " + filter)
+            offset = 0
+            while True:
+                participants = client(GetParticipantsRequest(request.data['channel_name'], ChannelParticipantsSearch(filter), offset, limit,
+                    hash=0
+                ))
+                if not participants.users:
+                    break
+                offset += len(participants.users)
+
+                for usr in participants.users:
+                    if (usr not in users):
+                        users.append(usr)
+
+    return Response({"Получено пользователей: " + str(len(users))}) 
 
 class ChannelInfoView(APIView):
     def get(self, request):
